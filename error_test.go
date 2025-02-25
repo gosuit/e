@@ -210,7 +210,7 @@ func TestToJson(t *testing.T) {
 
 func TestToHttpCode(t *testing.T) {
 	tests := []struct {
-		code     StatusType
+		code     Status
 		expected int
 	}{
 		{Internal, http.StatusInternalServerError},
@@ -298,7 +298,7 @@ func TestToGRPCErr(t *testing.T) {
 
 func TestToGRPCCode(t *testing.T) {
 	tests := []struct {
-		code     StatusType
+		code     Status
 		expected codes.Code
 	}{
 		{code: Internal, expected: codes.Internal},

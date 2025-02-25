@@ -3,7 +3,6 @@ package e
 import (
 	"errors"
 	"log/slog"
-	"net/http"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -27,7 +26,7 @@ type Error interface {
 
 	// GetCode returns the status code associated with the error.
 	// The StatusType can be a custom type that represents various error codes.
-	GetCode() StatusType
+	GetCode() Status
 
 	Log(msg ...string)
 
@@ -45,7 +44,7 @@ type Error interface {
 
 	// WithCode sets a new status code for the error instance.
 	// This method allows users to update the error code dynamically.
-	WithCode(StatusType) Error
+	WithCode(Status) Error
 
 	// ToJson() returns erro struct with json tags.
 	ToJson() JsonError
@@ -74,16 +73,8 @@ type Error interface {
 	ToGRPCErr() error
 }
 
-type errorStruct struct {
-	message string
-	errs    []error
-	tags    map[string]interface{}
-	code    StatusType
-	log     *slog.Logger
-}
-
 // New returns type Error with message.
-func New(msg string, status StatusType, errs ...error) Error {
+func New(msg string, status Status, errs ...error) Error {
 	if errs == nil {
 		errs = []error{}
 	}
@@ -95,6 +86,29 @@ func New(msg string, status StatusType, errs ...error) Error {
 		code:    status,
 		log:     slog.Default(),
 	}
+}
+
+// E creates a new custom error instance if the provided error is not nil.
+// It initializes the custom error with an empty message and associates the given error
+// with an internal status code by default. If the provided error is nil, it returns nil.
+func E(err error) Error {
+	if err != nil {
+		if _, ok := err.(Error); ok {
+			return err.(Error)
+		}
+
+		return New("", Internal, err)
+	}
+
+	return nil
+}
+
+type errorStruct struct {
+	message string
+	errs    []error
+	tags    map[string]interface{}
+	code    Status
+	log     *slog.Logger
 }
 
 func (e *errorStruct) GetMessage() string {
@@ -109,8 +123,12 @@ func (e *errorStruct) GetTag(key string) interface{} {
 	return e.tags[key]
 }
 
-func (e *errorStruct) GetCode() StatusType {
+func (e *errorStruct) GetCode() Status {
 	return e.code
+}
+
+type JsonError struct {
+	Error string `json:"error"`
 }
 
 func (e *errorStruct) Log(msg ...string) {
@@ -179,7 +197,7 @@ func (e *errorStruct) WithCtx(c ctx.Context) Error {
 }
 */
 
-func (e *errorStruct) WithCode(status StatusType) Error {
+func (e *errorStruct) WithCode(status Status) Error {
 	return New(e.message, status, e.errs...)
 }
 
@@ -191,30 +209,7 @@ func (e *errorStruct) ToJson() JsonError {
 
 // ToHttpCode convert Error to http status code.
 func (e *errorStruct) ToHttpCode() int {
-	switch e.code {
-
-	case Internal:
-		return http.StatusInternalServerError
-
-	case NotFound:
-		return http.StatusNotFound
-
-	case BadInput:
-		return http.StatusBadRequest
-
-	case Unauthorize:
-		return http.StatusUnauthorized
-
-	case Forbidden:
-		return http.StatusForbidden
-
-	case Conflict:
-		return http.StatusConflict
-
-	default:
-		return http.StatusInternalServerError
-
-	}
+	return e.code.ToHttp()
 }
 
 func (e *errorStruct) Error() string {
@@ -237,7 +232,7 @@ func (e *errorStruct) ToGRPCErr() error {
 func FromGRPCErr(err error) Error {
 	stat, _ := status.FromError(err)
 
-	var code StatusType
+	var code Status
 
 	switch stat.Code() {
 
@@ -266,44 +261,9 @@ func FromGRPCErr(err error) Error {
 
 // ToGRPCCode convert Error to grpc status code.
 func (e *errorStruct) ToGRPCCode() codes.Code {
-	switch e.code {
-
-	case Internal:
-		return codes.Internal
-
-	case NotFound:
-		return codes.NotFound
-
-	case BadInput:
-		return codes.InvalidArgument
-
-	case Unauthorize:
-		return codes.Unauthenticated
-
-	case Conflict:
-		return codes.AlreadyExists
-
-	default:
-		return codes.Internal
-
-	}
+	return e.code.ToGRPC()
 }
 
 func (e *errorStruct) SlErr() slog.Attr {
 	return slog.String("error", e.Error())
-}
-
-// E creates a new custom error instance if the provided error is not nil.
-// It initializes the custom error with an empty message and associates the given error
-// with an internal status code by default. If the provided error is nil, it returns nil.
-func E(err error) Error {
-	if err != nil {
-		if _, ok := err.(Error); ok {
-			return err.(Error)
-		}
-
-		return New("", Internal, err)
-	}
-
-	return nil
 }
