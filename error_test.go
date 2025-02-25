@@ -181,22 +181,22 @@ func TestToJson(t *testing.T) {
 	tests := []struct {
 		name string
 		err  Error
-		want JsonError
+		want jsonError
 	}{
 		{
 			name: "Default",
 			err:  New("some error", Internal),
-			want: JsonError{Error: "some error"},
+			want: jsonError{Error: "some error"},
 		},
 		{
 			name: "With err",
 			err:  New("some error", Internal, errors.New("invalid data")),
-			want: JsonError{Error: "some error"},
+			want: jsonError{Error: "some error"},
 		},
 		{
 			name: "Empty message",
 			err:  New("", Internal),
-			want: JsonError{Error: ""},
+			want: jsonError{Error: ""},
 		},
 	}
 
@@ -277,7 +277,7 @@ func TestToGRPCErr(t *testing.T) {
 	testErr := errors.New("some grpc error")
 	err := New(msg, Internal, testErr)
 
-	grpcErr := err.ToGRPCErr()
+	grpcErr := err.ToGRPC()
 	if grpcErr == nil {
 		t.Fatal("Expected non-nil gRPC error")
 	}

@@ -1,9 +1,7 @@
 package e
 
 import (
-	"errors"
 	"log/slog"
-	"strings"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -47,7 +45,7 @@ type Error interface {
 	WithCode(Status) Error
 
 	// ToJson() returns erro struct with json tags.
-	ToJson() JsonError
+	ToJson() jsonError
 
 	// ToGRPCCode converts the error's status code to a gRPC error code.
 	// This method facilitates interoperability with gRPC services by providing
@@ -70,7 +68,7 @@ type Error interface {
 
 	// ToGRPCErr converts the custom error into a standard Go error type suitable for gRPC.
 	// This method allows seamless integration with gRPC error handling mechanisms.
-	ToGRPCErr() error
+	ToGRPC() error
 }
 
 // New returns type Error with message.
@@ -103,133 +101,7 @@ func E(err error) Error {
 	return nil
 }
 
-type errorStruct struct {
-	message string
-	errs    []error
-	tags    map[string]interface{}
-	code    Status
-	log     *slog.Logger
-}
-
-func (e *errorStruct) GetMessage() string {
-	return e.message
-}
-
-func (e *errorStruct) GetError() error {
-	return errors.Join(e.errs...)
-}
-
-func (e *errorStruct) GetTag(key string) interface{} {
-	return e.tags[key]
-}
-
-func (e *errorStruct) GetCode() Status {
-	return e.code
-}
-
-type JsonError struct {
-	Error string `json:"error"`
-}
-
-func (e *errorStruct) Log(msg ...string) {
-	l := e.log
-
-	l = l.With(e.SlErr())
-
-	for key, value := range e.tags {
-		l = l.With(key, value)
-	}
-
-	message := ""
-
-	if len(msg) != 0 {
-		message = strings.Join(msg, " ")
-	}
-
-	l.Error(message)
-}
-
-func (e *errorStruct) WithMessage(msg string) Error {
-	return New(msg, e.code, e.errs...)
-}
-
-func (e *errorStruct) WithErr(err error) Error {
-	return New(e.message, e.code, append(e.errs, err)...)
-}
-
-func (e *errorStruct) WithTag(key string, value interface{}) Error {
-	err := New(e.message, e.code, e.errs...).(*errorStruct)
-
-	for key, value := range e.tags {
-		err.tags[key] = value
-	}
-
-	err.tags[key] = value
-
-	return err
-}
-
-//TODO: init this with lec
-/*
-func (e *errorStruct) WithCtx(c ctx.Context) Error {
-	err := New(e.message, e.code, e.errs...).(*errorStruct)
-
-	ctxErr := c.Err()
-	if ctxErr != nil {
-		err.errs = append(err.errs, c.Err())
-	}
-
-	for key, value := range e.tags {
-		err.tags[key] = value
-	}
-
-	for key, value := range c.GetValues() {
-		if value.Share {
-			err.tags[key] = value.Val
-		}
-	}
-
-	err.log = slog.New(c.SlHandler())
-
-	c.AddErr(err)
-
-	return err
-}
-*/
-
-func (e *errorStruct) WithCode(status Status) Error {
-	return New(e.message, status, e.errs...)
-}
-
-func (e *errorStruct) ToJson() JsonError {
-	return JsonError{
-		Error: e.message,
-	}
-}
-
-// ToHttpCode convert Error to http status code.
-func (e *errorStruct) ToHttpCode() int {
-	return e.code.ToHttp()
-}
-
-func (e *errorStruct) Error() string {
-	if e.message == "" && (e.errs == nil || (len(e.errs) == 0)) {
-		return "nil"
-	}
-	if e.errs == nil || (len(e.errs) == 0) {
-		return e.message
-	}
-	if e.message == "" {
-		return errors.Join(e.errs...).Error()
-	}
-	return e.message + ": " + errors.Join(e.errs...).Error()
-}
-
-func (e *errorStruct) ToGRPCErr() error {
-	return status.Error(e.ToGRPCCode(), e.message)
-}
-
-func FromGRPCErr(err error) Error {
+func FromGRPC(err error) Error {
 	stat, _ := status.FromError(err)
 
 	var code Status
@@ -257,13 +129,4 @@ func FromGRPCErr(err error) Error {
 	}
 
 	return New(stat.Message(), code)
-}
-
-// ToGRPCCode convert Error to grpc status code.
-func (e *errorStruct) ToGRPCCode() codes.Code {
-	return e.code.ToGRPC()
-}
-
-func (e *errorStruct) SlErr() slog.Attr {
-	return slog.String("error", e.Error())
 }
