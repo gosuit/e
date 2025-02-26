@@ -3,6 +3,7 @@ package e
 import (
 	"log/slog"
 
+	"github.com/gosuit/lec"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -38,7 +39,7 @@ type Error interface {
 
 	WithTag(key string, value interface{}) Error
 
-	//WithCtx(c ctx.Context) Error
+	WithCtx(c lec.Context) Error
 
 	// WithCode sets a new status code for the error instance.
 	// This method allows users to update the error code dynamically.

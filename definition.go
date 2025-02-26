@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log/slog"
 	"strings"
+
+	"github.com/gosuit/lec"
 )
 
 type errorStruct struct {
@@ -54,9 +56,7 @@ func (e *errorStruct) WithTag(key string, value interface{}) Error {
 	return err
 }
 
-//TODO: init this with lec
-/*
-func (e *errorStruct) WithCtx(c ctx.Context) Error {
+func (e *errorStruct) WithCtx(c lec.Context) Error {
 	err := New(e.message, e.code, e.errs...).(*errorStruct)
 
 	ctxErr := c.Err()
@@ -80,7 +80,6 @@ func (e *errorStruct) WithCtx(c ctx.Context) Error {
 
 	return err
 }
-*/
 
 func (e *errorStruct) Log(msg ...string) {
 	l := e.log.With(e.SlErr())

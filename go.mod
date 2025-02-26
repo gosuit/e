@@ -3,6 +3,7 @@ module github.com/gosuit/e
 go 1.24.0
 
 require (
+	github.com/gosuit/lec v1.0.0
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.70.0
 )

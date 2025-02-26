@@ -8,13 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	//"github.com/nikitaSstepanov/tools/ctx"
+	"github.com/gosuit/lec"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-//TODO: add ctx
 
 func TestNew(t *testing.T) {
 	msg := "An error occurred"
@@ -141,9 +139,8 @@ func TestWithTag(t *testing.T) {
 	assert.Equal(t, value, err.GetTag(key))
 }
 
-/*
 func TestWithCtx(t *testing.T) {
-	c := ctx.New(slog.Default())
+	c := lec.New(slog.Default())
 
 	key := "key"
 	value := "value"
@@ -159,7 +156,6 @@ func TestWithCtx(t *testing.T) {
 
 	assert.Equal(t, value, err.GetTag(key))
 }
-*/
 
 func TestWithCode(t *testing.T) {
 	msg := "Some msg"
