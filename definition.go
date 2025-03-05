@@ -2,18 +2,22 @@ package e
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
+	"runtime"
 	"strings"
 
 	"github.com/gosuit/lec"
 )
 
 type errorStruct struct {
-	message string
-	errs    []error
-	tags    map[string]interface{}
-	code    Status
-	log     *slog.Logger
+	message     string
+	errs        []error
+	tags        map[string]any
+	code        Status
+	source_file string
+	source_line int
+	log         *slog.Logger
 }
 
 func (e *errorStruct) GetMessage() string {
@@ -28,44 +32,88 @@ func (e *errorStruct) GetError() error {
 	return errors.Join(e.errs...)
 }
 
-func (e *errorStruct) GetTag(key string) interface{} {
+func (e *errorStruct) GetTag(key string) any {
 	return e.tags[key]
 }
 
+func (e *errorStruct) GetSource() (string, int) {
+	return e.source_file, e.source_line
+}
+
 func (e *errorStruct) WithMessage(msg string) Error {
-	return New(msg, e.code, e.errs...)
+	_, file, line, _ := runtime.Caller(1)
+
+	return &errorStruct{
+		message:     msg,
+		errs:        e.errs,
+		tags:        e.tags,
+		code:        e.code,
+		log:         e.log,
+		source_file: file,
+		source_line: line,
+	}
 }
 
 func (e *errorStruct) WithCode(status Status) Error {
-	return New(e.message, status, e.errs...)
+	_, file, line, _ := runtime.Caller(1)
+
+	return &errorStruct{
+		message:     e.message,
+		errs:        e.errs,
+		tags:        e.tags,
+		code:        status,
+		log:         e.log,
+		source_file: file,
+		source_line: line,
+	}
 }
 
 func (e *errorStruct) WithErr(err error) Error {
-	return New(e.message, e.code, append(e.errs, err)...)
+	_, file, line, _ := runtime.Caller(1)
+
+	return &errorStruct{
+		message:     e.message,
+		errs:        append(e.errs, err),
+		tags:        e.tags,
+		code:        e.code,
+		log:         e.log,
+		source_file: file,
+		source_line: line,
+	}
 }
 
-func (e *errorStruct) WithTag(key string, value interface{}) Error {
-	err := New(e.message, e.code, e.errs...).(*errorStruct)
+func (e *errorStruct) WithTag(key string, value any) Error {
+	e.tags[key] = value
 
-	for key, value := range e.tags {
-		err.tags[key] = value
+	_, file, line, _ := runtime.Caller(1)
+
+	return &errorStruct{
+		message:     e.message,
+		errs:        e.errs,
+		tags:        e.tags,
+		code:        e.code,
+		log:         e.log,
+		source_file: file,
+		source_line: line,
 	}
-
-	err.tags[key] = value
-
-	return err
 }
 
 func (e *errorStruct) WithCtx(c lec.Context) Error {
-	err := New(e.message, e.code, e.errs...).(*errorStruct)
+	_, file, line, _ := runtime.Caller(1)
+
+	err := &errorStruct{
+		message:     e.message,
+		errs:        e.errs,
+		tags:        e.tags,
+		code:        e.code,
+		log:         slog.New(c.SlHandler()),
+		source_file: file,
+		source_line: line,
+	}
 
 	ctxErr := c.Err()
 	if ctxErr != nil {
 		err.errs = append(err.errs, c.Err())
-	}
-
-	for key, value := range e.tags {
-		err.tags[key] = value
 	}
 
 	for key, value := range c.GetValues() {
@@ -73,8 +121,6 @@ func (e *errorStruct) WithCtx(c lec.Context) Error {
 			err.tags[key] = value.Val
 		}
 	}
-
-	err.log = slog.New(c.SlHandler())
 
 	c.AddErr(err)
 
@@ -93,6 +139,11 @@ func (e *errorStruct) Log(msg ...string) {
 	if len(msg) != 0 {
 		message = strings.Join(msg, " ")
 	}
+
+	l = l.With(
+		slog.String("error_code", e.code.ToString()),
+		slog.String("error_source", fmt.Sprintf("file: %s line: %d", e.source_file, e.source_line)),
+	)
 
 	l.Error(message)
 }

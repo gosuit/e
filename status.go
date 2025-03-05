@@ -6,17 +6,30 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+// Status represents different error types that can occur in the system.
 type Status int
 
 const (
+	// Internal means an internal server error.
 	Internal Status = iota
+
+	// NotFound means that the requested resource was not found.
 	NotFound
+
+	// BadInput means that the request input is invalid.
 	BadInput
+
+	// Conflict means a conflict when performing an action, for example, trying to create an already existing resource.
 	Conflict
+
+	// Forbidden means that the action is forbidden for the user.
 	Forbidden
+
+	// Unauthorize means that the user is not authorized to perform the action.
 	Unauthorize
 )
 
+// ToString converts the Status value to its string representation.
 func (s Status) ToString() string {
 	switch s {
 
@@ -43,6 +56,7 @@ func (s Status) ToString() string {
 	}
 }
 
+// ToHttp converts the Status value to the corresponding HTTP status code.
 func (s Status) ToHttp() int {
 	switch s {
 
@@ -69,6 +83,7 @@ func (s Status) ToHttp() int {
 	}
 }
 
+// ToGRPC converts the Status value to the corresponding gRPC status code.
 func (s Status) ToGRPC() codes.Code {
 	switch s {
 
@@ -86,6 +101,9 @@ func (s Status) ToGRPC() codes.Code {
 
 	case Conflict:
 		return codes.AlreadyExists
+
+	case Forbidden:
+		return codes.PermissionDenied
 
 	default:
 		return codes.Internal

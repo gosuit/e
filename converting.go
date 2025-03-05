@@ -18,12 +18,10 @@ func (e *errorStruct) ToJson() jsonError {
 	}
 }
 
-// ToHttpCode convert Error to http status code.
 func (e *errorStruct) ToHttpCode() int {
 	return e.code.ToHttp()
 }
 
-// ToGRPCCode convert Error to grpc status code.
 func (e *errorStruct) ToGRPCCode() codes.Code {
 	return e.code.ToGRPC()
 }
@@ -34,14 +32,17 @@ func (e *errorStruct) ToGRPC() error {
 
 func (e *errorStruct) Error() string {
 	if e.message == "" && (e.errs == nil || (len(e.errs) == 0)) {
-		return "nil"
+		return "<nil>"
 	}
+
 	if e.errs == nil || (len(e.errs) == 0) {
 		return e.message
 	}
+
 	if e.message == "" {
 		return errors.Join(e.errs...).Error()
 	}
+
 	return e.message + ": " + errors.Join(e.errs...).Error()
 }
 

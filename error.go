@@ -2,6 +2,7 @@ package e
 
 import (
 	"log/slog"
+	"runtime"
 
 	"github.com/gosuit/lec"
 	"google.golang.org/grpc/codes"
@@ -21,12 +22,19 @@ type Error interface {
 	// This method provides access to the original error that may contain more details.
 	GetError() error
 
-	GetTag(key string) interface{}
+	// GetTag returns the tag value associated with the given key.
+	// This method allows users to retrieve additional context information attached to the error.
+	GetTag(key string) any
 
 	// GetCode returns the status code associated with the error.
 	// The StatusType can be a custom type that represents various error codes.
 	GetCode() Status
 
+	// GetSource returns the source file and line where error was created.
+	GetSource() (string, int)
+
+	// Log logs the error with an optional message, error creation source and other metadata.
+	// This method provides a way to log error events with custom messages for debugging and monitoring.
 	Log(msg ...string)
 
 	// WithMessage sets a new error message for the error instance.
@@ -37,15 +45,20 @@ type Error interface {
 	// This method allows users to associate a different error with this custom error type.
 	WithErr(error) Error
 
-	WithTag(key string, value interface{}) Error
+	// WithTag sets a new tag (key-value pair) to the error instance.
+	// This method allows users to add contextual information to the error.
+	WithTag(key string, value any) Error
 
+	// WithCtx sets a context to the error instance.
+	// This method allows users to associate a context with the error.
+	// It change error logger with logger from context, add err to context.
 	WithCtx(c lec.Context) Error
 
 	// WithCode sets a new status code for the error instance.
 	// This method allows users to update the error code dynamically.
 	WithCode(Status) Error
 
-	// ToJson() returns erro struct with json tags.
+	// ToJson() returns error struct with json tags.
 	ToJson() jsonError
 
 	// ToGRPCCode converts the error's status code to a gRPC error code.
@@ -78,12 +91,16 @@ func New(msg string, status Status, errs ...error) Error {
 		errs = []error{}
 	}
 
+	_, file, line, _ := runtime.Caller(1)
+
 	return &errorStruct{
-		message: msg,
-		errs:    errs,
-		tags:    make(map[string]interface{}),
-		code:    status,
-		log:     slog.Default(),
+		message:     msg,
+		errs:        errs,
+		tags:        make(map[string]any),
+		code:        status,
+		log:         slog.Default(),
+		source_file: file,
+		source_line: line,
 	}
 }
 
@@ -96,14 +113,44 @@ func E(err error) Error {
 			return err.(Error)
 		}
 
-		return New("", Internal, err)
+		_, file, line, _ := runtime.Caller(1)
+
+		return &errorStruct{
+			message:     "",
+			errs:        []error{err},
+			tags:        make(map[string]any),
+			code:        Internal,
+			log:         slog.Default(),
+			source_file: file,
+			source_line: line,
+		}
 	}
 
 	return nil
 }
 
+// FromGRPC converts a gRPC error to an Error type.
+// It extracts the gRPC status code and message, maps the gRPC code to a predefined internal Status,
+// and creates a new Error instance with the extracted message and mapped Status.
 func FromGRPC(err error) Error {
-	stat, _ := status.FromError(err)
+	if err == nil {
+		return nil
+	}
+
+	_, file, line, _ := runtime.Caller(1)
+
+	stat, ok := status.FromError(err)
+	if !ok {
+		return &errorStruct{
+			message:     "",
+			errs:        []error{err},
+			tags:        make(map[string]any),
+			code:        Internal,
+			log:         slog.Default(),
+			source_file: file,
+			source_line: line,
+		}
+	}
 
 	var code Status
 
@@ -124,10 +171,21 @@ func FromGRPC(err error) Error {
 	case codes.AlreadyExists:
 		code = Conflict
 
+	case codes.PermissionDenied:
+		code = Forbidden
+
 	default:
 		code = Internal
 
 	}
 
-	return New(stat.Message(), code)
+	return &errorStruct{
+		message:     stat.Message(),
+		errs:        make([]error, 0),
+		tags:        make(map[string]any),
+		code:        code,
+		log:         slog.Default(),
+		source_file: file,
+		source_line: line,
+	}
 }
