@@ -2,8 +2,8 @@ package e
 
 import (
 	"errors"
-	"log/slog"
 
+	"github.com/gosuit/sl"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -46,6 +46,6 @@ func (e *errorStruct) Error() string {
 	return e.message + ": " + errors.Join(e.errs...).Error()
 }
 
-func (e *errorStruct) SlErr() slog.Attr {
-	return slog.String("error", e.Error())
+func (e *errorStruct) SlErr() sl.Attr {
+	return sl.StringAttr("error", e.Error())
 }

@@ -1,10 +1,10 @@
 package e
 
 import (
-	"log/slog"
 	"runtime"
 
 	"github.com/gosuit/lec"
+	"github.com/gosuit/sl"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -78,7 +78,7 @@ type Error interface {
 	// SlErr returns structured logging attributes for the error.
 	// This method provides a way to log the error with additional context,
 	// making it easier to analyze issues in logs.
-	SlErr() slog.Attr
+	SlErr() sl.Attr
 
 	// ToGRPCErr converts the custom error into a standard Go error type suitable for gRPC.
 	// This method allows seamless integration with gRPC error handling mechanisms.
@@ -98,7 +98,7 @@ func New(msg string, status Status, errs ...error) Error {
 		errs:        errs,
 		tags:        make(map[string]any),
 		code:        status,
-		log:         slog.Default(),
+		log:         sl.Default(),
 		source_file: file,
 		source_line: line,
 	}
@@ -120,7 +120,7 @@ func E(err error) Error {
 			errs:        []error{err},
 			tags:        make(map[string]any),
 			code:        Internal,
-			log:         slog.Default(),
+			log:         sl.Default(),
 			source_file: file,
 			source_line: line,
 		}
@@ -146,7 +146,7 @@ func FromGRPC(err error) Error {
 			errs:        []error{err},
 			tags:        make(map[string]any),
 			code:        Internal,
-			log:         slog.Default(),
+			log:         sl.Default(),
 			source_file: file,
 			source_line: line,
 		}
@@ -184,7 +184,7 @@ func FromGRPC(err error) Error {
 		errs:        make([]error, 0),
 		tags:        make(map[string]any),
 		code:        code,
-		log:         slog.Default(),
+		log:         sl.Default(),
 		source_file: file,
 		source_line: line,
 	}

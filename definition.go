@@ -3,11 +3,11 @@ package e
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"runtime"
 	"strings"
 
 	"github.com/gosuit/lec"
+	"github.com/gosuit/sl"
 )
 
 type errorStruct struct {
@@ -17,7 +17,7 @@ type errorStruct struct {
 	code        Status
 	source_file string
 	source_line int
-	log         *slog.Logger
+	log         sl.Logger
 }
 
 func (e *errorStruct) GetMessage() string {
@@ -106,7 +106,7 @@ func (e *errorStruct) WithCtx(c lec.Context) Error {
 		errs:        e.errs,
 		tags:        e.tags,
 		code:        e.code,
-		log:         slog.New(c.SlHandler()),
+		log:         sl.New(c.Logger().Config()),
 		source_file: file,
 		source_line: line,
 	}
@@ -141,8 +141,8 @@ func (e *errorStruct) Log(msg ...string) {
 	}
 
 	l = l.With(
-		slog.String("error_code", e.code.ToString()),
-		slog.String("error_source", fmt.Sprintf("file: %s line: %d", e.source_file, e.source_line)),
+		sl.StringAttr("error_code", e.code.ToString()),
+		sl.StringAttr("error_source", fmt.Sprintf("file: %s line: %d", e.source_file, e.source_line)),
 	)
 
 	l.Error(message)

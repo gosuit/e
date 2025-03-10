@@ -2,10 +2,10 @@ package e
 
 import (
 	"errors"
-	"log/slog"
 	"testing"
 
 	"github.com/gosuit/lec"
+	"github.com/gosuit/sl"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -92,7 +92,7 @@ func TestWithTag(t *testing.T) {
 }
 
 func TestWithCtx(t *testing.T) {
-	c := lec.New(slog.Default())
+	c := lec.New(sl.Default())
 
 	key := "key"
 	value := "value"
