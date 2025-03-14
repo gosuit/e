@@ -29,7 +29,7 @@ import (
 func main() {
     value, err := some()
     if err != nil {
-        fmt.Println(err.ToHttpCode())
+        fmt.Println(err.ToHttpCode()) // Output: 500
     }
 
     // Do something
