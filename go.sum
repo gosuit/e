@@ -8,14 +8,8 @@ github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek
 github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/gosuit/lec v1.0.1 h1:GJnrKQ+WKx5RwbRPtzkplfLYdFNhd82h9qrgwspdjO8=
-github.com/gosuit/lec v1.0.1/go.mod h1:+mp0lJPyPDaFck3JqcrT0TA2mqAeCgCHFz+nWW2Ot44=
-github.com/gosuit/lec v1.0.2 h1:Z7k6Lx7IsELGuvuTRNXFUEWZn4XqegSL6I6QIfVorQw=
-github.com/gosuit/lec v1.0.2/go.mod h1:/RCjuxJC8yQm1xmLMvhPuzNzUWax8baP6f9iaRCRmZs=
 github.com/gosuit/lec v1.0.3 h1:oW4HawWcoPEXErGjkYE6zZ4BvI8oHCoXcEx2ZNf0oDk=
 github.com/gosuit/lec v1.0.3/go.mod h1:dZXU1wUSoyuE02x7ZQ2emi3rsZefcMwYXZVUfNOHlfE=
-github.com/gosuit/sl v1.0.3 h1:R7JfIajsyPnEBm9q4gtPiP0ucl6bncRGobJDLoVL2Hs=
-github.com/gosuit/sl v1.0.3/go.mod h1:XR95X35CoNjTCP6kOqTS7pPfbEY1OJhkrR55MpNoMi0=
 github.com/gosuit/sl v1.0.4 h1:xICiQKCIVR+oZO+04SVCX+bd9qLnyvIcq9IN7lutNIs=
 github.com/gosuit/sl v1.0.4/go.mod h1:XR95X35CoNjTCP6kOqTS7pPfbEY1OJhkrR55MpNoMi0=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
