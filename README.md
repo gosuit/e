@@ -2,6 +2,12 @@
 
 This GoLang library provides a custom error interface that enhances the standard error handling capabilities in Go. It encapsulates error messages, status codes, and conversion methods for gRPC and HTTP responses, allowing developers to manage errors more effectively in their applications.
 
+## Installation
+
+```zsh
+go get github.com/gosuit/e
+```
+
 ## Features
 
 - Custom error type with additional context and functionality.
@@ -9,13 +15,6 @@ This GoLang library provides a custom error interface that enhances the standard
 - Support for logging errors with metadata.
 - Conversion methods for gRPC and HTTP status codes.
 - Structured logging attributes for better log analysis.
-
-## Installation
-
-To install the library, use the following command:
-```zsh
-go get github.com/gosuit/e
-```
 
 ## Usage
 
