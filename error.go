@@ -3,7 +3,6 @@ package e
 import (
 	"runtime"
 
-	"github.com/gosuit/lec"
 	"github.com/gosuit/sl"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,6 +17,10 @@ type Error interface {
 	// This method allows users to retrieve a human-readable description of the error.
 	GetMessage() string
 
+	// GetStatus returns the status code associated with the error.
+	// The StatusType can be a custom type that represents various error codes.
+	GetStatus() Status
+
 	// GetError returns the underlying error.
 	// This method provides access to the original error that may contain more details.
 	GetError() error
@@ -26,20 +29,16 @@ type Error interface {
 	// This method allows users to retrieve additional context information attached to the error.
 	GetTag(key string) any
 
-	// GetCode returns the status code associated with the error.
-	// The StatusType can be a custom type that represents various error codes.
-	GetCode() Status
-
 	// GetSource returns the source file and line where error was created.
 	GetSource() (string, int)
-
-	// Log logs the error with an optional message, error creation source and other metadata.
-	// This method provides a way to log error events with custom messages for debugging and monitoring.
-	Log(msg ...string)
 
 	// WithMessage sets a new error message for the error instance.
 	// This method allows users to update the error message dynamically.
 	WithMessage(string) Error
+
+	// WithStatus sets a new status code for the error instance.
+	// This method allows users to update the error code dynamically.
+	WithStatus(Status) Error
 
 	// WithErr sets a new underlying error for the error instance.
 	// This method allows users to associate a different error with this custom error type.
@@ -49,14 +48,10 @@ type Error interface {
 	// This method allows users to add contextual information to the error.
 	WithTag(key string, value any) Error
 
-	// WithCtx sets a context to the error instance.
-	// This method allows users to associate a context with the error.
-	// It change error logger with logger from context, add err to context.
-	WithCtx(c lec.Context) Error
-
-	// WithCode sets a new status code for the error instance.
-	// This method allows users to update the error code dynamically.
-	WithCode(Status) Error
+	// Error returns the string representation of the error.
+	// This method implements the standard error interface, allowing the error
+	// to be used in contexts where a simple error message is required.
+	Error() string
 
 	// ToJson() returns error struct with json tags.
 	ToJson() jsonError
@@ -64,25 +59,20 @@ type Error interface {
 	// ToGRPCCode converts the error's status code to a gRPC error code.
 	// This method facilitates interoperability with gRPC services by providing
 	// an appropriate error code representation.
-	ToGRPCCode() codes.Code
+	GetGrpcCode() codes.Code
 
 	// ToHttpCode converts the error's status code to an HTTP status code.
 	// This method helps in mapping application-specific errors to standard HTTP responses.
-	ToHttpCode() int
+	GetHttpCode() int
 
-	// Error returns the string representation of the error.
-	// This method implements the standard error interface, allowing the error
-	// to be used in contexts where a simple error message is required.
-	Error() string
+	// ToGRPCErr converts the custom error into a standard Go error type suitable for gRPC.
+	// This method allows seamless integration with gRPC error handling mechanisms.
+	ToGRPC() error
 
 	// SlErr returns structured logging attributes for the error.
 	// This method provides a way to log the error with additional context,
 	// making it easier to analyze issues in logs.
 	SlErr() sl.Attr
-
-	// ToGRPCErr converts the custom error into a standard Go error type suitable for gRPC.
-	// This method allows seamless integration with gRPC error handling mechanisms.
-	ToGRPC() error
 }
 
 // New returns type Error with message.

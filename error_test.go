@@ -24,8 +24,8 @@ func TestNew(t *testing.T) {
 		t.Errorf("Expected message %s, got %s", err.Error(), err.GetError().Error())
 	}
 
-	if err.GetCode() != code {
-		t.Errorf("Expected code %v, got %v", code, err.GetCode())
+	if err.GetStatus() != code {
+		t.Errorf("Expected code %v, got %v", code, err.GetStatus())
 	}
 }
 
@@ -60,7 +60,7 @@ func TestE(t *testing.T) {
 	}
 }
 
-func TestToGRPC(t *testing.T) {
+func TestFromGRPC(t *testing.T) {
 	tests := []struct {
 		msg      string
 		grpcCode codes.Code
@@ -103,7 +103,7 @@ func TestToGRPC(t *testing.T) {
 
 		custom := FromGRPC(err)
 
-		assert.Equal(t, custom.GetCode(), tt.status)
+		assert.Equal(t, custom.GetStatus(), tt.status)
 		assert.Equal(t, custom.GetMessage(), tt.msg)
 	}
 }

@@ -2,12 +2,11 @@ package e
 
 import (
 	"errors"
-	"fmt"
 	"runtime"
-	"strings"
 
-	"github.com/gosuit/lec"
 	"github.com/gosuit/sl"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type errorStruct struct {
@@ -24,7 +23,7 @@ func (e *errorStruct) GetMessage() string {
 	return e.message
 }
 
-func (e *errorStruct) GetCode() Status {
+func (e *errorStruct) GetStatus() Status {
 	return e.code
 }
 
@@ -54,7 +53,7 @@ func (e *errorStruct) WithMessage(msg string) Error {
 	}
 }
 
-func (e *errorStruct) WithCode(status Status) Error {
+func (e *errorStruct) WithStatus(status Status) Error {
 	_, file, line, _ := runtime.Caller(1)
 
 	return &errorStruct{
@@ -98,52 +97,44 @@ func (e *errorStruct) WithTag(key string, value any) Error {
 	}
 }
 
-func (e *errorStruct) WithCtx(c lec.Context) Error {
-	_, file, line, _ := runtime.Caller(1)
-
-	err := &errorStruct{
-		message:     e.message,
-		errs:        e.errs,
-		tags:        e.tags,
-		code:        e.code,
-		log:         sl.New(c.Logger().Config()),
-		source_file: file,
-		source_line: line,
-	}
-
-	ctxErr := c.Err()
-	if ctxErr != nil {
-		err.errs = append(err.errs, c.Err())
-	}
-
-	for key, value := range c.GetValues() {
-		if value.Share {
-			err.tags[key] = value.Val
-		}
-	}
-
-	c.AddErr(err)
-
-	return err
+type jsonError struct {
+	Error string `json:"error"`
 }
 
-func (e *errorStruct) Log(msg ...string) {
-	l := e.log.With(e.SlErr())
+func (e *errorStruct) ToJson() jsonError {
+	return jsonError{
+		Error: e.message,
+	}
+}
 
-	for key, value := range e.tags {
-		l = l.With(key, value)
+func (e *errorStruct) Error() string {
+	if e.message == "" && (e.errs == nil || (e.errs != nil && len(e.errs) == 0)) {
+		return "<nil>"
 	}
 
-	message := ""
-
-	if len(msg) != 0 {
-		message = strings.Join(msg, " ")
+	if e.errs == nil || (e.errs != nil && len(e.errs) == 0) {
+		return e.message
 	}
 
-	l = l.With(
-		sl.StringAttr("error_code", e.code.ToString()),
-		sl.StringAttr("error_source", fmt.Sprintf("file: %s line: %d", e.source_file, e.source_line)),
-	)
+	if e.message == "" {
+		return errors.Join(e.errs...).Error()
+	}
 
-	l.Error(message)
+	return e.message + ": " + errors.Join(e.errs...).Error()
+}
+
+func (e *errorStruct) GetHttpCode() int {
+	return e.code.ToHttp()
+}
+
+func (e *errorStruct) GetGrpcCode() codes.Code {
+	return e.code.ToGRPC()
+}
+
+func (e *errorStruct) ToGRPC() error {
+	return status.Error(e.GetGrpcCode(), e.message)
+}
+
+func (e *errorStruct) SlErr() sl.Attr {
+	return sl.StringAttr("error", e.Error())
 }
