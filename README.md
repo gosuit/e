@@ -18,19 +18,57 @@ go get github.com/gosuit/e
 
 ## Usage
 
+### Error usage
+
 ```golang
 package main
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/gosuit/e"
 )
 
 func main() {
-	err := e.New("error", e.Internal)
+	err := e.New("error message", e.Internal).
+		WithTag("key", "value").
+		WithErr(errors.New("underlying error"))
 
-	fmt.Println(err.GetHttpCode())
+	err.GetMessage()           // error message
+	err.GetStatus().ToString() // Internal
+	err.GetError()             // underlying error
+	err.GetTag("key")          // value
+	err.GetSource()            // <your path>/main.go 12
+	err.GetHttpCode()          // 500
+	err.GetGrpcCode()          // Internal
+	err.ToJson()               // {error message}
+	err.Error()                // error message: underlying error
+	err.ToGRPC()               // rpc error: code = Internal desc = error message
+	err.SlErr()                // error=error message: underlying error
+}
+```
+
+### Error converting
+
+```golang
+package main
+
+import (
+	"errors"
+
+	"github.com/gosuit/e"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+func main() {
+	err := e.E(errors.New("error"))
+
+	// Use err....
+
+	err = e.FromGRPC(status.Error(codes.Internal, "msg"))
+
+	// Use err...
 }
 ```
 
