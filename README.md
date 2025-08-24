@@ -1,6 +1,8 @@
 # E
 
-This GoLang library provides a custom error interface that enhances the standard error handling capabilities in Go. It encapsulates error messages, status codes, and conversion methods for gRPC and HTTP responses, allowing developers to manage errors more effectively in their applications.
+This GoLang library allows you to handle errors more flexibly.
+
+A custom error allows you to carry a large amount of additional error data and convert it to various formats.
 
 ## Installation
 
@@ -10,11 +12,9 @@ go get github.com/gosuit/e
 
 ## Features
 
-- Custom error type with additional context and functionality.
-- Methods to retrieve error messages, status, underlying errors, and associated tags.
-- Support for logging errors with metadata.
-- Conversion methods for gRPC and HTTP status codes.
-- Structured logging attributes for better log analysis.
+- **Additional information**: message, status, tags, underlying error and error source.
+- **Codes managing**: getting HTTP and gRPC code based on status.
+- **Сonversion**: converting errors to and from various formats.
 
 ## Usage
 
@@ -22,46 +22,17 @@ go get github.com/gosuit/e
 package main
 
 import (
-    "github.com/gosuit/e"
+	"fmt"
+
+	"github.com/gosuit/e"
 )
 
 func main() {
-    value, err := some()
-    if err != nil {
-        fmt.Println(err.ToHttpCode()) // Output: 500
-    }
+	err := e.New("error", e.Internal)
 
-    // Do something
-}
-
-func some() (int, e.Error) {
-    // Do something
-
-    return 0, e.New("Someting going wrong...", e.Internal)
+	fmt.Println(err.GetHttpCode())
 }
 ```
-
-## Methods
-
-The Error interface includes the following methods:
-
-- GetMessage() string
-- GetError() error
-- GetTag(key string) any
-- GetCode() Status
-- GetSource() (string, int)
-- Log(msg ...string)
-- WithMessage(string) Error
-- WithErr(error) Error
-- WithTag(key string, value any) Error
-- WithCtx(c lec.Context) Error
-- WithCode(Status) Error
-- ToJson() jsonError
-- ToGRPCCode() codes.Code
-- ToHttpCode() int
-- Error() string
-- SlErr() slog.Attr
-- ToGRPCErr() error
 
 ## Contributing
 
